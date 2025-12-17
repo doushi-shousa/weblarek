@@ -33,7 +33,7 @@
 
 ```bash
 npm install
-````
+```
 
 или
 
@@ -196,16 +196,19 @@ export interface ICustomer {
 
 ### `IOrderRequest`
 
-Данные, отправляемые при оформлении заказа:
+Данные, отправляемые при оформлении заказа (POST `/order/`):
 
 ```ts
-export interface IOrderRequest {
-  payment: TPayment;
-  email: string;
-  phone: string;
-  address: string;
+export interface IOrderRequest extends ICustomer {
+  items: string[];
+  total: number;
 }
 ```
+
+items — массив идентификаторов товаров (id), которые входят в заказ
+
+total — итоговая сумма заказа
+
 
 ### `IOrderResponse`
 
@@ -320,7 +323,3 @@ export interface IOrderResponse {
 * `ApiClient` — запрос каталога с сервера, сохранение массива в модель каталога и вывод в консоль
 
 Проверка выполняется через `console.log` (по требованиям спринта).
-
----
-
-```

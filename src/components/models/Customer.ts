@@ -1,4 +1,5 @@
 import { ICustomer, TPayment } from '../../types';
+import { IEvents } from '../base/Events';
 
 // Удобный тип: данные покупателя, которые могут быть заполнены не полностью
 export type CustomerState = Omit<ICustomer, 'payment'> & { payment: TPayment | null };
@@ -6,6 +7,8 @@ export type CustomerState = Omit<ICustomer, 'payment'> & { payment: TPayment | n
 export type CustomerErrors = Partial<Record<keyof CustomerState, string>>;
 
 export class Customer {
+  constructor(private readonly events?: IEvents) {}
+
   private _payment: TPayment | null = null;
   private _address = '';
   private _email = '';
@@ -17,6 +20,9 @@ export class Customer {
     if (data.address !== undefined) this._address = data.address;
     if (data.email !== undefined) this._email = data.email;
     if (data.phone !== undefined) this._phone = data.phone;
+
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() } as any);
+    this.validateCustomerInfo();
   }
 
   set payment(value: TPayment | null) {
@@ -47,6 +53,9 @@ export class Customer {
     this._address = '';
     this._email = '';
     this._phone = '';
+
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() } as any);
+    this.validateCustomerInfo();
   }
 
   validateCustomerInfo(): CustomerErrors {
@@ -56,6 +65,8 @@ export class Customer {
     if (!this._address) errors.address = 'Необходим адрес доставки';
     if (!this._email) errors.email = 'Укажите электронную почту';
     if (!this._phone) errors.phone = 'Введите номер телефона';
+
+    this.events?.emit('form:errors', errors as any);
 
     return errors;
   }

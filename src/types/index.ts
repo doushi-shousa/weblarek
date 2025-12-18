@@ -107,3 +107,10 @@ export interface IOrderResponse {
   /** Итоговая сумма заказа */
   total: number;
 }
+
+export interface IError {
+  payment?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}

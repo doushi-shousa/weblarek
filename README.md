@@ -2,7 +2,7 @@
 
 Стек: **HTML**, **SCSS**, **TypeScript**, **Vite**
 
-Проект — интернет-магазин с товарами для веб-разработчиков. В этой части реализованы **модели данных** (каталог, корзина, покупатель) и **слой коммуникации** (API-клиент) + проверка работы через `console.log` в `main.ts`.
+Проект — интернет-магазин с товарами для веб-разработчиков. Реализована архитектура **MVP (Model-View-Presenter)**: слой данных (каталог, корзина, покупатель), слой представления (UI-компоненты) и слой логики (Presenter в `main.ts`) + коммуникация с сервером через API-клиент.
 
 ---
 
@@ -11,19 +11,20 @@
 - `src/` — исходные файлы проекта
 - `src/components/` — компоненты приложения
 - `src/components/base/` — базовый код (Api, EventEmitter, Component и т.д.)
-- `src/components/models/` — модели данных и коммуникационный клиент (мои классы спринта)
+- `src/components/models/` — модели данных и коммуникационный клиент
+- `src/components/views/` — компоненты представления (UI)
 - `src/types/index.ts` — типы и интерфейсы
 - `src/utils/` — константы и утилиты
 - `src/scss/styles.scss` — корневой файл стилей
-- `src/main.ts` — точка входа приложения (тут выполняется тестирование моделей и API)
+- `src/main.ts` — точка входа приложения (**Presenter**)
 
 Важные файлы:
-- `index.html` — HTML-файл главной страницы
+- `index.html` — HTML-файл главной страницы (включая `<template>` для компонентов)
 - `src/types/index.ts` — файл с типами
-- `src/main.ts` — точка входа приложения
+- `src/main.ts` — точка входа приложения (Presenter)
 - `src/scss/styles.scss` — корневой файл стилей
-- `src/utils/constants.ts` — файл с константами (в т.ч. адрес API)
-- `src/utils/data.ts` — мок-данные `apiProducts` для локального тестирования
+- `src/utils/constants.ts` — файл с константами (в т.ч. адрес API и `categoryMap`)
+- `src/utils/data.ts` — мок-данные `apiProducts` (могут использоваться для локальных проверок)
 
 ---
 
@@ -33,140 +34,118 @@
 
 ```bash
 npm install
-```
-
 или
 
-```bash
+bash
+Копировать код
 yarn
-```
+2) Переменные окружения (.env)
+Создайте файл .env в корне проекта и добавьте:
 
-### 2) Переменные окружения (.env)
-
-Создайте файл `.env` в корне проекта и добавьте:
-
-```env
+env
+Копировать код
 VITE_API_ORIGIN=https://larek-api.nomoreparties.co
-```
+Важно: адрес указывается без слеша в конце.
+Полные пути запросов берутся из констант (например, src/utils/constants.ts).
 
-> Важно: адрес указывается **без слеша** в конце.
-> Полные пути запросов берутся из констант (например, `src/utils/constants.ts`).
-
-### 3) Запуск в режиме разработки
-
-```bash
+3) Запуск в режиме разработки
+bash
+Копировать код
 npm run dev
-```
-
 или
 
-```bash
+bash
+Копировать код
 yarn dev
-```
-
----
-
-## Сборка
-
-```bash
+Сборка
+bash
+Копировать код
 npm run build
-```
-
 или
 
-```bash
+bash
+Копировать код
 yarn build
-```
-
----
-
-# Интернет-магазин «Web-Larёk»
-
+Интернет-магазин «Web-Larёk»
 «Web-Larёk» — интернет-магазин, где пользователи могут просматривать каталог товаров, добавлять товары в корзину и оформлять заказы. В интерфейсе используются модальные окна для просмотра карточек товара, корзины и форм оформления заказа.
 
----
+Архитектура приложения
+Код приложения разделён на слои согласно парадигме MVP (Model-View-Presenter), которая обеспечивает чёткое разделение ответственности:
 
-## Архитектура приложения
+Model — слой данных: хранение состояния и операции над данными.
 
-Код приложения разделён на слои согласно парадигме **MVP (Model-View-Presenter)**, которая обеспечивает чёткое разделение ответственности:
+View — слой представления: отображение данных на странице, генерация событий пользовательских действий.
 
-* **Model** — слой данных: хранение состояния и операции над данными.
-* **View** — слой представления: отображение данных на странице.
-* **Presenter** — слой логики: связывает View и Model, обрабатывает события и управляет сценарием приложения.
+Presenter — слой логики: связывает View и Model, подписывается на события и управляет сценарием приложения.
 
 Взаимодействие между классами обеспечивается событийно-ориентированным подходом: модели и представления генерируют события, а презентер подписывается на них и реагирует, вызывая методы моделей/представлений.
 
----
-
-## Базовый код
-
-### Класс `Component`
-
-Базовый класс для всех компонентов интерфейса. Класс является дженериком и принимает в `T` тип данных, которые могут быть переданы в метод `render`.
+Базовый код
+Класс Component
+Базовый класс для всех компонентов интерфейса. Класс является дженериком и принимает в T тип данных, которые могут быть переданы в метод render.
 
 Конструктор:
-`constructor(container: HTMLElement)` — принимает DOM-элемент, за отображение которого отвечает компонент.
+constructor(container: HTMLElement) — принимает DOM-элемент, за отображение которого отвечает компонент.
 
 Поля:
 
-* `container: HTMLElement` — корневой DOM-элемент компонента.
+container: HTMLElement — корневой DOM-элемент компонента.
 
 Методы:
 
-* `render(data?: Partial<T>): HTMLElement` — принимает данные для отображения, записывает их в поля класса и возвращает DOM-элемент.
-* `setImage(element: HTMLImageElement, src: string, alt?: string): void` — утилитарный метод для установки изображения.
+render(data?: Partial<T>): HTMLElement — принимает данные для отображения, записывает их в поля класса и возвращает DOM-элемент.
 
-### Класс `Api`
+setImage(element: HTMLImageElement, src: string, alt?: string): void — утилитарный метод для установки изображения.
 
+Класс Api
 Содержит базовую логику отправки запросов.
 
 Конструктор:
-`constructor(baseUrl: string, options: RequestInit = {})`
+constructor(baseUrl: string, options: RequestInit = {})
 
 Поля:
 
-* `baseUrl: string` — базовый адрес сервера
-* `options: RequestInit` — настройки запросов
+baseUrl: string — базовый адрес сервера
+
+options: RequestInit — настройки запросов
 
 Методы:
 
-* `get(uri: string): Promise<object>` — GET запрос на эндпоинт
-* `post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object>` — отправка данных на эндпоинт
-* `handleResponse(response: Response): Promise<object>` — проверка ответа сервера и преобразование в объект/ошибку
+get(uri: string): Promise<object> — GET запрос на эндпоинт
 
-### Класс `EventEmitter`
+post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object> — отправка данных на эндпоинт
 
+handleResponse(response: Response): Promise<object> — проверка ответа сервера и преобразование в объект/ошибку
+
+Класс EventEmitter
 Брокер событий реализует паттерн «Наблюдатель», позволяя отправлять события и подписываться на них.
 
 Поля:
 
-* `_events: Map<string | RegExp, Set<Function>>` — хранилище подписок на события.
+_events: Map<string | RegExp, Set<Function>> — хранилище подписок на события.
 
 Методы:
 
-* `on<T extends object>(event: EventName, callback: (data: T) => void): void` — подписка на событие
-* `emit<T extends object>(event: string, data?: T): void` — генерация события
-* `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void` — фабрика обработчика события
+on<T extends object>(event: EventName, callback: (data: T) => void): void — подписка на событие
 
----
+emit<T extends object>(event: string, data?: T): void — генерация события
 
-## Данные
+trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void — фабрика обработчика события
 
-Типы и интерфейсы описаны в `src/types/index.ts`.
+Данные
+Типы и интерфейсы описаны в src/types/index.ts.
 
-### `TPayment`
-
+TPayment
 Способ оплаты:
 
-```ts
+ts
+Копировать код
 export type TPayment = 'cash' | 'card';
-```
-
-### `IProduct`
-
+IProduct
 Данные товара:
 
-```ts
+ts
+Копировать код
 export interface IProduct {
   id: string;
   description: string;
@@ -175,151 +154,224 @@ export interface IProduct {
   category: string;
   price: number | null;
 }
-```
+price может быть null — такой товар в UI считается недоступным для покупки.
 
-`price` может быть `null` — такой товар в UI считается недоступным для покупки.
-
-### `ICustomer`
-
+ICustomer
 Данные покупателя:
 
-```ts
+ts
+Копировать код
 export interface ICustomer {
   payment: TPayment;
   email: string;
   phone: string;
   address: string;
 }
-```
+Внутри модели Customer поле payment хранится как TPayment | null, пока пользователь не выберет способ оплаты (удобно для валидации).
 
-> Внутри модели `Customer` поле `payment` хранится как `TPayment | null`, пока пользователь не выберет способ оплаты (удобно для валидации).
+IOrderRequest
+Данные, отправляемые при оформлении заказа (POST /order/):
 
-### `IOrderRequest`
-
-Данные, отправляемые при оформлении заказа (POST `/order/`):
-
-```ts
+ts
+Копировать код
 export interface IOrderRequest extends ICustomer {
   items: string[];
   total: number;
 }
-```
-
 items — массив идентификаторов товаров (id), которые входят в заказ
-
 total — итоговая сумма заказа
 
-
-### `IOrderResponse`
-
+IOrderResponse
 Ответ сервера при успешном оформлении заказа:
 
-```ts
+ts
+Копировать код
 export interface IOrderResponse {
   id: string;
   total: number;
 }
-```
+Модели данных
+Модели данных отвечают только за хранение и управление данными. Они не работают с DOM и не зависят от UI.
 
----
-
-## Модели данных
-
-Модели данных отвечают только за **хранение и управление данными**. Они не работают с DOM и не зависят от UI.
-
-### Каталог товаров — `Product`
-
-Файл: `src/components/models/Product.ts`
+Каталог товаров — Product
+Файл: src/components/models/Product.ts
 
 Назначение: хранит массив товаров каталога и выбранный товар для детального отображения.
 
 Поля:
 
-* `products: IProduct[]` — массив всех товаров
-* `selected: IProduct | null` — выбранный товар
+products: IProduct[] — массив всех товаров
+
+selected: IProduct | null — выбранный товар
 
 Методы:
 
-* `setProducts(products: IProduct[]): void` — сохранить массив товаров
-* `getProducts(): IProduct[]` — получить массив товаров
-* `getProductById(id: string): IProduct | undefined` — найти товар по `id`
-* `setSelected(product: IProduct): void` — сохранить выбранный товар
-* `getSelected(): IProduct | null` — получить выбранный товар
+setProducts(products: IProduct[]): void — сохранить массив товаров (эмитит catalog:changed)
 
-### Корзина — `Cart`
+getProducts(): IProduct[] — получить массив товаров
 
-Файл: `src/components/models/Cart.ts`
+getProductById(id: string): IProduct | undefined — найти товар по id
+
+setSelected(product: IProduct | null): void — сохранить выбранный товар (эмитит product:selected)
+
+getSelected(): IProduct | null — получить выбранный товар
+
+Корзина — Cart
+Файл: src/components/models/Cart.ts
 
 Назначение: хранит товары, выбранные для покупки.
 
 Поля:
 
-* `items: IProduct[]` — массив товаров в корзине
+items: IProduct[] — массив товаров в корзине
 
 Методы:
 
-* `getItems(): IProduct[]` — получить товары из корзины
-* `addItem(product: IProduct): void` — добавить товар (без дубликатов)
-* `removeItem(itemId: string): void` — удалить товар по `id`
-* `clear(): void` — очистить корзину
-* `getTotal(): number` — сумма всех товаров (если `price === null`, считается как `0`)
-* `getCount(): number` — количество товаров
-* `hasItem(productId: string): boolean` — проверить наличие товара по `id`
+getItems(): IProduct[] — получить товары из корзины
 
-### Покупатель — `Customer`
+addItem(product: IProduct): void — добавить товар (без дубликатов) (эмитит basket:changed)
 
-Файл: `src/components/models/Customer.ts`
+removeItemById(itemId: string): void — удалить товар по id (эмитит basket:changed)
+
+clear(): void — очистить корзину (эмитит basket:changed)
+
+getTotal(): number — сумма всех товаров (если price === null, считается как 0)
+
+getCount(): number — количество товаров
+
+hasItem(productId: string): boolean — проверить наличие товара по id
+
+Покупатель — Customer
+Файл: src/components/models/Customer.ts
 
 Назначение: хранит данные покупателя, умеет очищать и валидировать поля.
 
 Типы:
 
-* `CustomerState` — состояние покупателя (включая `payment: TPayment | null`)
-* `CustomerErrors` — объект ошибок валидации (ключи — поля, значения — текст ошибки)
+CustomerState — состояние покупателя (включая payment: TPayment | null)
+
+CustomerErrors — объект ошибок валидации (ключи — поля, значения — текст ошибки)
 
 Поля:
 
-* `_payment: TPayment | null`
-* `_address: string`
-* `_email: string`
-* `_phone: string`
+_payment: TPayment | null
+
+_address: string
+
+_email: string
+
+_phone: string
 
 Методы:
 
-* `setCustomerInfo(data: Partial<CustomerState>): void` — обновление данных частями (не затирает ранее заполненные поля)
-* `getCustomerInfo(): CustomerState` — получить текущее состояние покупателя
-* `clearCustomerInfo(): void` — очистить данные покупателя
-* `validateCustomerInfo(): CustomerErrors` — валидация полей (поле валидно, если не пустое).
-  Возвращает объект ошибок, где присутствуют только поля с ошибками.
+setCustomerInfo(data: Partial<CustomerState>): void — обновление данных частями (эмитит customer:changed, запускает валидацию)
 
----
+getCustomerInfo(): CustomerState — получить текущее состояние покупателя
 
-## Слой коммуникации
+clearCustomerInfo(): void — очистить данные покупателя (эмитит customer:changed, запускает валидацию)
 
-### `ApiClient`
+validateCustomerInfo(): CustomerErrors — валидация полей, эмитит form:errors
 
-Файл: `src/components/models/ApiClient.ts`
+Слой коммуникации
+ApiClient
+Файл: src/components/models/ApiClient.ts
 
 Назначение: изолирует сетевое взаимодействие с сервером и предоставляет методы получения каталога и отправки заказа.
 
 Конструктор:
 
-* `constructor(api: IApi)` — принимает объект, реализующий `IApi`
+constructor(api: IApi) — принимает объект, реализующий IApi
 
 Методы:
 
-* `fetchProducts(): Promise<IProduct[]>` — GET `/product/`, возвращает массив товаров (`items`)
-* `sendOrder(order: IOrderRequest): Promise<IOrderResponse>` — POST `/order/`, отправляет данные заказа и возвращает ответ сервера
+fetchProducts(): Promise<IProduct[]> — GET /product/, возвращает массив товаров (items)
 
----
+sendOrder(order: IOrderRequest): Promise<IOrderResponse> — POST /order/, отправляет данные заказа и возвращает ответ сервера
 
-## Проверка работы (main.ts)
+Слой представления (View)
+View-компоненты отвечают только за DOM и пользовательские действия. Данные не хранят.
 
-В `src/main.ts` создаются экземпляры:
+Файлы: src/components/views/*
 
-* `Product` — проверка сохранения каталога, выбора товара, поиска по id
-* `Cart` — добавление/удаление, подсчёт количества и суммы, очистка
-* `Customer` — заполнение, частичное обновление, валидация, очистка
-* `ApiClient` — запрос каталога с сервера, сохранение массива в модель каталога и вывод в консоль
+Gallery — контейнер каталога на главной странице
 
-Проверка выполняется через `console.log` (по требованиям спринта).
+Header — шапка, кнопка корзины и счётчик товаров (эмитит basket:open)
+
+Modal — модальное окно (эмитит modal:close, закрывается по оверлею и крестику)
+
+Basket — отображение корзины (эмитит basket:ready)
+
+Form — базовый класс форм (ошибки, submit-кнопка)
+
+OrderForm — шаг 1 оформления (эмитит order:change, order:next)
+
+ContactsForm — шаг 2 оформления (эмитит order:change, contacts:submit)
+
+OrderSuccess — успешная оплата (эмитит success:closed)
+
+Card — базовая карточка товара
+
+CardCatalog — карточка товара в каталоге (эмитит card:open)
+
+CardPreview — карточка товара в превью (эмитит card:add / card:delete, при price === null кнопка Недоступно)
+
+CardBasket — элемент товара в корзине (эмитит card:delete)
+
+События приложения
+События от View (UI)
+basket:open
+
+modal:close
+
+card:open { card: string }
+
+card:add { card: string }
+
+card:delete { card: string }
+
+basket:ready
+
+order:change { field: string, value: string }
+
+order:next
+
+contacts:submit
+
+success:closed
+
+События от Models
+catalog:changed { products: IProduct[] }
+
+product:selected { product: IProduct | null }
+
+basket:changed { items, count, total } (или аналогичный payload)
+
+customer:changed { customer }
+
+form:errors CustomerErrors
+
+Презентер (Presenter)
+Файл: src/main.ts
+
+Назначение: связывает Model и View.
+
+Подписывается на события от моделей (catalog:changed, basket:changed, product:selected, …) и обновляет UI.
+
+Подписывается на события от View (card:*, basket:*, order:*, …) и вызывает методы моделей/открывает модальные окна.
+
+Не эмитит событий сам — только обрабатывает.
+
+Проверка работы
+Ручная проверка сценариев в интерфейсе:
+
+каталог отображается после загрузки с сервера
+
+клик по карточке → открывается превью в модалке
+
+price === null → кнопка Недоступно и заблокирована
+
+корзина: список/пустая, total, кнопка оформления disabled при пустой корзине
+
+оформление: 2 шага, ошибки, кнопки disabled пока форма невалидна
+
+модалки закрываются по оверлею и крестику, не скроллятся

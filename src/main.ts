@@ -1,90 +1,296 @@
-import './scss/styles.scss';
-import { Cart } from "./components/models/Cart";
-import { Product } from "./components/models/Product";
-import { Customer } from "./components/models/Customer";
-import { ApiClient } from "./components/models/ApiClient";
-import { apiProducts } from "./utils/data";
+import "./scss/styles.scss";
+
 import { Api } from "./components/base/Api";
+import { EventEmitter } from "./components/base/Events";
+import { ensureElement } from "./utils/utils";
 import { API_URL } from "./utils/constants";
 
+import { ApiClient } from "./components/models/ApiClient";
+import { Product } from "./components/models/Product";
+import { Cart } from "./components/models/Cart";
+import { Customer } from "./components/models/Customer";
+
+import { Gallery } from "./components/views/Gallery";
+import { Header } from "./components/views/Header";
+import { Modal } from "./components/views/Modal";
+import { Basket } from "./components/views/Basket";
+
+import { CardCatalog } from "./components/views/CardCatalog";
+import { CardPreview } from "./components/views/CardPreview";
+import { CardBasket } from "./components/views/CardBasket";
+
+import { OrderForm } from "./components/views/OrderForm";
+import { ContactsForm } from "./components/views/ContactsForm";
+import { OrderSuccess } from "./components/views/OrderSuccess";
+
+import type { IProduct, IOrderResponse, TPayment } from "./types";
+
 /**
- * 🧪 Local sanity-check: проверяем модели данных и API
- * Тут нет UI-магии — только честные console.log и немного веры в TypeScript.
+ * 🧪 Local sanity-check (но уже по-взрослому):
+ * Теперь это не набор console.log, а полноценный Presenter (MVP):
+ * - View генерирует события
+ * - Models хранят данные и тоже эмитят события при изменении
+ * - main.ts (Presenter) слушает всё это и обновляет UI
+ *
+ * Тут нет “магии” — только события, рендер и немного веры в TypeScript.
  */
 
 // ─────────────────────────────────────────────────────────────
-// 🛍️ Каталог товаров: кладём товары в модель, как в прод — но без прод-страха
+// 🧩 Helpers: шаблоны и служебные штуки
 // ─────────────────────────────────────────────────────────────
-const catalogModel = new Product();
+function cloneTemplate<T extends HTMLElement>(selector: string): T {
+  const tpl = ensureElement<HTMLTemplateElement>(selector);
+  const node = tpl.content.firstElementChild?.cloneNode(true);
+  if (!node) throw new Error(`Template ${selector} is empty`);
+  return node as T;
+}
 
-// Берём мок-данные из стартера (пока сервер отдыхает)
-catalogModel.setProducts(apiProducts.items);
+type ModalView = "preview" | "basket" | "order" | "contacts" | "success" | null;
+let activeModalView: ModalView = null;
 
-console.log("🛍️ [CATALOG] Массив товаров из каталога:", catalogModel.getProducts());
+// ─────────────────────────────────────────────────────────────
+// 🧠 Models + 🌐 API + 📣 Events
+// ─────────────────────────────────────────────────────────────
+const events = new EventEmitter();
+const apiClient = new ApiClient(new Api(API_URL));
 
-// Выбираем первый товар — пусть почувствует себя «selected» хотя бы в консоли
-const firstProduct = apiProducts.items[0];
-if (firstProduct) {
-  catalogModel.setSelected(firstProduct);
-  console.log("🔎 [CATALOG] Выбранный товар:", catalogModel.getSelected());
+const catalogModel = new Product(events);
+const cartModel = new Cart(events);
+const customerModel = new Customer(events);
+
+// ─────────────────────────────────────────────────────────────
+// 🖼️ Views (корневые компоненты приложения)
+// ─────────────────────────────────────────────────────────────
+const galleryView = new Gallery();
+const headerView = new Header(events, ensureElement<HTMLElement>(".header"));
+const modal = new Modal(events, ensureElement<HTMLElement>(".modal"));
+
+// ─────────────────────────────────────────────────────────────
+// 🎨 Render helpers: мелкие функции отображения (без логики)
+// ─────────────────────────────────────────────────────────────
+function openModalWith(view: ModalView, content: HTMLElement) {
+  activeModalView = view;
+  modal.content = content;
+  modal.open();
+}
+
+function closeModal() {
+  activeModalView = null;
+  modal.close();
+}
+
+function renderHeader() {
+  // 🧺 Счётчик товаров в корзине — в шапку
+  headerView.counter = cartModel.getCount();
+}
+
+function renderCatalog(products: IProduct[]) {
+  // 🛍️ Каталог товаров — карточки на главной
+  const cards = products.map((product) => {
+    const card = new CardCatalog(events, cloneTemplate<HTMLElement>("#card-catalog"));
+    return card.render({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      category: product.category,
+      image: product.image,
+    });
+  });
+
+  galleryView.catalog = cards;
+}
+
+function renderBasket(basketView: Basket) {
+  // 🧺 Корзина — список выбранных товаров
+  const rows = cartModel.getItems().map((product, index) => {
+    const row = new CardBasket(events, cloneTemplate<HTMLElement>("#card-basket"));
+    return row.render({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      index: index + 1,
+    });
+  });
+
+  basketView.items = rows;
+  basketView.total = cartModel.getTotal();
+}
+
+function openBasket() {
+  // 🧺 Открываем корзину в модалке
+  const basketView = new Basket(events, cloneTemplate<HTMLElement>("#basket"));
+  renderBasket(basketView);
+  openModalWith("basket", basketView.render());
+}
+
+function openPreview(product: IProduct) {
+  // 🔎 Открываем превью товара в модалке
+  const preview = new CardPreview(events, cloneTemplate<HTMLElement>("#card-preview"));
+  const el = preview.render({
+    id: product.id,
+    title: product.title,
+    price: product.price,
+    category: product.category,
+    image: product.image,
+    description: product.description,
+    inCart: cartModel.hasItem(product.id),
+  });
+
+  // 🚫 Если цены нет — кнопка недоступна
+  if (product.price === null) preview.disableButton();
+
+  openModalWith("preview", el);
+}
+
+function openOrder() {
+  // 🧾 Шаг 1 оформления: оплата + адрес
+  const form = new OrderForm(events, cloneTemplate<HTMLElement>("#order"));
+  const info = customerModel.getCustomerInfo();
+
+  form.addressValue = info.address ?? "";
+
+  // payment в модели может быть null — в форму подставляем только если выбран
+  if (info.payment) {
+    form.payment = info.payment as TPayment;
+  }
+
+  // Прогоняем валидацию, чтобы подсветились ошибки/кнопка
+  customerModel.validateCustomerInfo();
+
+  openModalWith("order", form.render());
+}
+
+function openContacts() {
+  // 📩 Шаг 2 оформления: email + phone
+  const form = new ContactsForm(events, cloneTemplate<HTMLElement>("#contacts"));
+  const info = customerModel.getCustomerInfo();
+
+  form.emailValue = info.email ?? "";
+  form.phoneValue = info.phone ?? "";
+
+  // Прогоняем валидацию, чтобы подсветились ошибки/кнопка
+  customerModel.validateCustomerInfo();
+
+  openModalWith("contacts", form.render());
+}
+
+function openSuccess(total: number) {
+  // ✅ Успешная оплата
+  const success = new OrderSuccess(events, cloneTemplate<HTMLElement>("#success"));
+  success.total = total;
+  openModalWith("success", success.render());
 }
 
 // ─────────────────────────────────────────────────────────────
-// 👤 Покупатель: заполняем данные (да, это не прод, но телефон всё равно нужен)
+// 📦 Presenter: события от МОДЕЛЕЙ (данные изменились → обновляем UI)
 // ─────────────────────────────────────────────────────────────
-const customerModel = new Customer();
-
-customerModel.setCustomerInfo({
-  payment: 'card',
-  address: "Санкт-Петерубрг 52",
-  phone: "+77777777777",
-  email: "test@test.ru",
+events.on<{ products: IProduct[] }>("catalog:changed", ({ products }) => {
+  // 🛍️ Каталог обновился — перерисовали
+  renderCatalog(products);
 });
 
-console.log("👤 [CUSTOMER] Информация о покупателе:", customerModel.getCustomerInfo());
+events.on("basket:changed", () => {
+  // 🧺 Корзина изменилась — обновляем счётчик и (если нужно) модалку
+  renderHeader();
+
+  if (activeModalView === "basket") {
+    const basketView = new Basket(events, cloneTemplate<HTMLElement>("#basket"));
+    renderBasket(basketView);
+    modal.content = basketView.render();
+  }
+});
+
+events.on("product:selected", () => {
+  // 🔎 Выбран товар — показываем превью
+  const selected = catalogModel.getSelected();
+  if (selected) openPreview(selected);
+});
 
 // ─────────────────────────────────────────────────────────────
-// 🧺 Корзина: добавляем пару товаров и считаем, сколько денег улетело бы в проде
+// 🖱️ Presenter: события от VIEW (пользователь что-то сделал → меняем модели / открываем модалки)
 // ─────────────────────────────────────────────────────────────
-const cartModel = new Cart();
-const [product1, product2] = apiProducts.items;
+events.on("modal:close", () => closeModal());
 
-// Добавляем товары в корзину — как в реальной жизни: сначала «надо», потом «ещё один»
-[product1, product2].forEach((p) => p && cartModel.addItem(p));
+events.on("basket:open", () => openBasket());
 
-console.log("🧺 [CART] Содержимое корзины:", cartModel.getItems());
-console.log("🔢 [CART] Общее количество товаров:", cartModel.getCount());
-console.log("💸 [CART] Общая сумма корзины:", cartModel.getTotal());
-console.log(`✅ [CART] Есть ли товар "${product1?.id}"?`, cartModel.hasItem(product1?.id || ''));
+events.on<{ card: string }>("card:open", ({ card }) => {
+  // Открыть карточку товара
+  const product = catalogModel.getProductById(card);
+  if (!product) return;
+  catalogModel.setSelected(product);
+});
 
-// Удаление и очистка — на случай, если «передумал» (классика)
-if (product1) cartModel.removeItemById(product1.id);
-console.log("🗑️ [CART] После удаления:", cartModel.getItems());
+events.on<{ card: string }>("card:add", ({ card }) => {
+  // Купить: добавить в корзину
+  const product = catalogModel.getProductById(card);
+  if (!product) return;
 
-cartModel.clear();
-console.log("🧼 [CART] После очистки корзины (0 — это хорошо):", cartModel.getCount());
+  cartModel.addItem(product);
+  closeModal();
+});
+
+events.on<{ card: string }>("card:delete", ({ card }) => {
+  // Удалить из корзины (или из превью)
+  cartModel.removeItemById(card);
+
+  // Если мы удалили из превью — просто закрываем
+  if (activeModalView === "preview") closeModal();
+});
+
+events.on("basket:ready", () => {
+  // Оформить → шаг 1
+  openOrder();
+});
+
+events.on<{ field: string; value: string }>("order:change", ({ field, value }) => {
+  // Любое изменение в формах → записываем в модель покупателя
+  customerModel.setCustomerInfo({ [field]: value } as any);
+});
+
+events.on("order:next", () => {
+  // Далее → шаг 2
+  openContacts();
+});
+
+events.on("contacts:submit", async () => {
+  // Оплатить → отправляем заказ на сервер
+  const customer = customerModel.getCustomerInfo();
+
+  const payload = {
+    // На момент оплаты способ оплаты должен быть выбран.
+    // Если вдруг null — подстрахуемся, чтобы TS не ругался.
+    payment: (customer.payment ?? "card") as TPayment,
+    email: customer.email,
+    phone: customer.phone,
+    address: customer.address,
+    items: cartModel.getItems().map((p) => p.id),
+    total: cartModel.getTotal(),
+  };
+
+  try {
+    // В ApiClient метод должен существовать: sendOrder(payload)
+    const res: IOrderResponse = await (apiClient as any).sendOrder(payload);
+
+    // ✅ Успех → чистим данные (как в ТЗ) и показываем сообщение
+    cartModel.clear();
+    customerModel.clearCustomerInfo();
+    openSuccess(res.total);
+  } catch (e) {
+    console.error("Order error:", e);
+  }
+});
+
+events.on("success:closed", () => {
+  // Закрыли окно успеха
+  closeModal();
+});
 
 // ─────────────────────────────────────────────────────────────
-// ✅ Валидация: проверяем, что клиент не «undefined», а вполне себе человек
+// 🚀 Bootstrap: старт приложения (получаем товары и запускаем UI)
 // ─────────────────────────────────────────────────────────────
-console.log("✅ [CUSTOMER] Валидация данных:", customerModel.validateCustomerInfo());
+renderHeader();
 
-// Сбрасываем покупателя — GDPR одобряет
-customerModel.clearCustomerInfo();
-console.log("🧽 [CUSTOMER] После очистки данных:", customerModel.getCustomerInfo());
-
-// ─────────────────────────────────────────────────────────────
-// 🌐 Сервер: идём за реальными товарами (и надеемся, что интернет сегодня добрый)
-// ─────────────────────────────────────────────────────────────
-const apiClient = new ApiClient(new Api(API_URL));
-
-apiClient.fetchProducts()
-  .then((products) => {
-    console.log("🌐 [API] Каталог с сервера:", products);
-
-    // Сохраняем в модель — теперь у нас «почти прод», только без дедлайна
-    catalogModel.setProducts(products);
-
-    console.log("📦 [CATALOG] Каталог в модели:", catalogModel.getProducts());
-  })
-  .catch((error) => console.error("🔥 [API] Ошибка API:", error));
+apiClient
+  .fetchProducts()
+  .then((products) => catalogModel.setProducts(products))
+  .catch((e) => console.error("API error:", e));

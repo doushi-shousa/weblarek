@@ -8,6 +8,9 @@ export class Card<T = {}> extends Component<TCard & T> {
   protected titleElement: HTMLElement;
   protected priceElement: HTMLElement;
 
+  // ✅ id не в DOM
+  protected _id = "";
+
   constructor(container: HTMLElement) {
     super(container);
 
@@ -16,8 +19,11 @@ export class Card<T = {}> extends Component<TCard & T> {
   }
 
   set id(value: string) {
-    this.container.dataset.id = value;
-    this.container.id = value;
+    this._id = value;
+  }
+
+  getId(): string {
+    return this._id;
   }
 
   set title(value: string) {

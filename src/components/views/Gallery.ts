@@ -1,5 +1,4 @@
 import { Component } from "../base/Component";
-import { ensureElement } from "../../utils/utils";
 
 interface IGallery {
   catalog: HTMLElement[];
@@ -8,8 +7,8 @@ interface IGallery {
 export class Gallery extends Component<IGallery> {
   protected catalogElement: HTMLElement;
 
-  constructor(container?: HTMLElement) {
-    super(container || ensureElement<HTMLElement>(".gallery"));
+  constructor(container: HTMLElement) {
+    super(container);
     this.catalogElement = this.container;
   }
 

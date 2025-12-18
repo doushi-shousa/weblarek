@@ -26,6 +26,9 @@ export class Form<T = {}> extends Component<TForm & T> {
     this.nextButton = ensureElement<HTMLButtonElement>(".button", this.container);
     this.formErrors = ensureElement<HTMLElement>(".form__errors", this.container);
     this.formInputs = ensureAllElements<HTMLInputElement>(".form__input", this.container);
+
+    // чтобы Enter в инпуте не отправлял форму и не перезагружал страницу
+    this.formElement.addEventListener("submit", (e) => e.preventDefault());
   }
 
   set isButtonValid(value: boolean) {

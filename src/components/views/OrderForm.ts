@@ -30,11 +30,13 @@ export class OrderForm extends Form<TOrderForm> {
       this.container
     );
 
-    this.cashButton.classList.remove("button_alt-active");
-    this.cardButton.classList.remove("button_alt-active");
+    // начальное состояние — без активной кнопки
+    [this.cashButton, this.cardButton].forEach((btn) =>
+      btn.classList.remove("button_alt-active")
+    );
 
-    this.cashButton.addEventListener("click", () => this.setPayment("cash"));
-    this.cardButton.addEventListener("click", () => this.setPayment("card"));
+    this.cashButton.addEventListener("click", () => this.emitPayment("cash"));
+    this.cardButton.addEventListener("click", () => this.emitPayment("card"));
 
     this.addressElement.addEventListener("input", () =>
       this.events.emit("order:change", {
@@ -45,42 +47,35 @@ export class OrderForm extends Form<TOrderForm> {
 
     this.nextButton.addEventListener("click", (e) => {
       e.preventDefault();
-      if (!this.nextButton.disabled) {
-        this.events.emit("order:next");
-      }
+      // disabled-кнопка кликов не генерирует
+      this.events.emit("order:next");
     });
-
-    this.events.on("form:errors", (errors: IError) => this.validateForm(errors));
   }
 
-  private setPayment(payment: TPayment): void {
-    this.toggleButtonState(payment);
+  // ✅ только эмит, без “локального рендера”
+  private emitPayment(payment: TPayment): void {
     this.events.emit("order:change", { field: "payment", value: payment });
   }
 
+  // ✅ презентер вызывает этот сеттер при изменении данных
   set payment(value: TPayment) {
-    this.toggleButtonState(value);
-  }
-
-  private toggleButtonState(payment: TPayment) {
-    this.cardButton.classList.remove("button_alt-active");
-    this.cashButton.classList.remove("button_alt-active");
-
-    if (payment === "card") {
-      this.cardButton.classList.add("button_alt-active");
-    } else if (payment === "cash") {
-      this.cashButton.classList.add("button_alt-active");
-    }
+    [this.cashButton, this.cardButton].forEach((button) => {
+      button.classList.toggle(
+        "button_alt-active",
+        button.getAttribute("name") === value
+      );
+    });
   }
 
   set addressValue(value: string) {
     this.addressElement.value = value;
   }
 
-  validateForm(errors: IError): void {
+  // ✅ не “валидирует”, а применяет состояние ошибок к форме
+  setValidationErrors(errors: IError): void {
     const orderErrors = [errors.address, errors.payment].filter(Boolean);
 
     this.isButtonValid = orderErrors.length === 0;
-    this.errors = orderErrors.length > 0 ? orderErrors.join(", ") : "";
+    this.errors = orderErrors.length ? orderErrors.join(", ") : "";
   }
 }

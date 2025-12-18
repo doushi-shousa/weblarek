@@ -41,12 +41,9 @@ export class ContactsForm extends Form<TContactsForm> {
     this.nextButton.textContent = "Оплатить";
     this.nextButton.addEventListener("click", (e) => {
       e.preventDefault();
-      if (!this.nextButton.disabled) {
-        this.events.emit("contacts:submit");
-      }
+      // disabled-кнопка кликов не генерирует
+      this.events.emit("contacts:submit");
     });
-
-    this.events.on("form:errors", (errors: IError) => this.validateForm(errors));
   }
 
   set emailValue(value: string) {
@@ -57,7 +54,8 @@ export class ContactsForm extends Form<TContactsForm> {
     this.phoneElement.value = value;
   }
 
-  validateForm(errors: IError): void {
+  // не “валидирует”, а применяет состояние ошибок к форме
+  setValidationErrors(errors: IError): void {
     const contactErrors = [errors.email, errors.phone].filter(Boolean);
 
     this.isButtonValid = contactErrors.length === 0;

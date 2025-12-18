@@ -19,7 +19,7 @@ export class CardBasket extends Card<TCardBasket> {
     );
 
     this.itemDeleteButton.addEventListener("click", () =>
-      this.events.emit("card:delete", { card: this.container.id })
+      this.events.emit("card:delete", { card: this.getId() })
     );
   }
 

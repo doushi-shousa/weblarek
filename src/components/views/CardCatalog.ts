@@ -17,21 +17,20 @@ export class CardCatalog extends Card<TCardCatalog> {
     this.imageElement = ensureElement<HTMLImageElement>(".card__image", this.container);
 
     this.container.addEventListener("click", () =>
-      this.events.emit("card:open", { card: this.container.id })
+      this.events.emit("card:open", { card: this.getId() })
     );
   }
 
   set category(value: string) {
     this.categoryElement.textContent = value;
 
-    // categoryMap: Record<string, string> (название категории -> модификатор)
-    Object.values(categoryMap).forEach((cls) => {
-      this.categoryElement.classList.remove(`card__category_${cls}`);
-    });
+    // ✅ сбрасываем модификаторы категории одним действием
+    this.categoryElement.className = "card__category";
 
+    // ✅ categoryMap хранит ГОТОВЫЙ класс (например: 'card__category_soft')
     const cls = (categoryMap as Record<string, string>)[value];
     if (cls) {
-      this.categoryElement.classList.add(`card__category_${cls}`);
+      this.categoryElement.classList.add(cls);
     }
   }
 

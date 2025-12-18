@@ -22,28 +22,23 @@ export class CardPreview extends Card<TCardPreview> {
     this.descriptionElement = ensureElement<HTMLElement>(".card__text", this.container);
     this.cardButton = ensureElement<HTMLButtonElement>(".card__button", this.container);
 
+    // ✅ одно событие без хранения состояния в DOM
     this.cardButton.addEventListener("click", () => {
       if (this.cardButton.disabled) return;
-
-      const isInCart = this.cardButton.getAttribute("data-in-cart") === "true";
-
-      this.events.emit(isInCart ? "card:delete" : "card:add", {
-        card: this.container.id,
-      });
+      this.events.emit("card:toggle", { card: this.getId() })
     });
   }
 
   set category(value: string) {
     this.categoryElement.textContent = value;
 
-    // categoryMap: Record<string, string> (название категории -> модификатор)
-    Object.values(categoryMap).forEach((cls) => {
-      this.categoryElement.classList.remove(`card__category_${cls}`);
-    });
+    // ✅ сброс модификаторов одной операцией
+    this.categoryElement.className = "card__category";
 
+    // ✅ categoryMap хранит ГОТОВЫЙ класс (например: 'card__category_soft')
     const cls = (categoryMap as Record<string, string>)[value];
     if (cls) {
-      this.categoryElement.classList.add(`card__category_${cls}`);
+      this.categoryElement.classList.add(cls);
     }
   }
 
@@ -63,20 +58,12 @@ export class CardPreview extends Card<TCardPreview> {
   set inCart(value: boolean) {
     if (this.cardButton.disabled) return;
 
-    if (value) {
-      this.cardButton.setAttribute("data-in-cart", "true");
-      this.cardButton.textContent = "Удалить из корзины";
-    } else {
-      this.cardButton.removeAttribute("data-in-cart");
-      this.cardButton.textContent = "Купить";
-    }
-
+    this.cardButton.textContent = value ? "Удалить из корзины" : "Купить";
     this.cardButton.disabled = false;
   }
 
   disableButton() {
     this.cardButton.disabled = true;
     this.cardButton.textContent = "Недоступно";
-    this.cardButton.removeAttribute("data-in-cart");
   }
 }

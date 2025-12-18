@@ -8,7 +8,7 @@
  * 🛰️ Какие HTTP-методы мы разрешаем для post-запросов.
  * Да, метод называется post(), но иногда ему нужно притвориться PUT/DELETE — бывает.
  */
-export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
+export type ApiPostMethods = "POST" | "PUT" | "DELETE";
 
 /**
  * 🔌 Контракт для API-клиента.
@@ -31,14 +31,18 @@ export interface IApi {
    * @param method HTTP-метод (по умолчанию POST)
    * @returns Promise с типизированным ответом
    */
-  post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
+  post<T extends object>(
+    uri: string,
+    data: object,
+    method?: ApiPostMethods
+  ): Promise<T>;
 }
 
 /**
  * 💳 Способ оплаты.
  * Два стула — выбирай любой: наличка или карта.
  */
-export type TPayment = 'cash' | 'card';
+export type TPayment = "cash" | "card";
 
 /**
  * 🛍️ Товар в магазине.
@@ -83,6 +87,23 @@ export interface ICustomer {
 }
 
 /**
+ * 🧾 Состояние покупателя в процессе заполнения форм.
+ * payment может быть null, пока способ оплаты не выбран.
+ */
+export type CustomerState = Omit<ICustomer, "payment"> & { payment: TPayment | null };
+
+/**
+ * ⚠️ Ошибки валидации покупателя/форм.
+ * Ключ — поле формы, значение — текст ошибки.
+ */
+export type CustomerErrors = Partial<Record<keyof CustomerState, string>>;
+
+/**
+ * ♻️ Алиас для ошибок формы (чтобы в UI было удобно импортировать IError).
+ */
+export type IError = CustomerErrors;
+
+/**
  * 📦 Данные для оформления заказа (то, что улетает на сервер в POST `/order/`).
  * В отличие от просто данных покупателя, заказ содержит:
  *  - items: массив id товаров
@@ -106,11 +127,4 @@ export interface IOrderResponse {
 
   /** Итоговая сумма заказа */
   total: number;
-}
-
-export interface IError {
-  payment?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
 }

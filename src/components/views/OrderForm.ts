@@ -1,7 +1,7 @@
-import { ensureElement } from "../../utils/utils.ts";
-import { IEvents } from "../base/Events.ts";
-import { Form, TForm } from "../views/Form.ts";
-import { TPayment, IError } from "../../types/index.ts";
+import { ensureElement } from "../../utils/utils";
+import { IEvents } from "../base/Events";
+import { Form, TForm } from "./Form";
+import { TPayment, IError } from "../../types";
 
 type TOrderForm = {
   addressElement: HTMLInputElement;
@@ -50,9 +50,7 @@ export class OrderForm extends Form<TOrderForm> {
       }
     });
 
-    this.events.on("form:errors", (errors: IError) =>
-      this.validateForm(errors)
-    );
+    this.events.on("form:errors", (errors: IError) => this.validateForm(errors));
   }
 
   private setPayment(payment: TPayment): void {

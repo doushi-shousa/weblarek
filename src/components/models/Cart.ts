@@ -17,22 +17,24 @@ export class Cart {
   addItem(product: IProduct): void {
     if (!this.hasItem(product.id)) {
       this.items.push(product);
-      this.events?.emit("basket:changed", this.getState());
+      this.events?.emit('basket:changed', this.getState());
     }
   }
 
   removeItemById(productId: string): void {
     const before = this.items.length;
     this.items = this.items.filter((item) => item.id !== productId);
+
     if (this.items.length !== before) {
-      this.events?.emit("basket:changed", this.getState());
+      this.events?.emit('basket:changed', this.getState());
     }
   }
 
   clear(): void {
     if (this.items.length === 0) return;
+
     this.items = [];
-    this.events?.emit("basket:changed", this.getState());
+    this.events?.emit('basket:changed', this.getState());
   }
 
   getCount(): number {

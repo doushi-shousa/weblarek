@@ -1,6 +1,6 @@
-import { IEvents } from "../base/Events.ts";
-import { ensureElement } from "../../utils/utils.ts";
-import { Card, TCard } from "../views/Card.ts";
+import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
+import { Card, TCard } from "./Card";
 
 export type TCardBasket = { index: number } & TCard;
 
@@ -11,10 +11,7 @@ export class CardBasket extends Card<TCardBasket> {
   constructor(protected events: IEvents, container: HTMLElement) {
     super(container);
 
-    this.indexElement = ensureElement<HTMLElement>(
-      ".basket__item-index",
-      this.container
-    );
+    this.indexElement = ensureElement<HTMLElement>(".basket__item-index", this.container);
 
     this.itemDeleteButton = ensureElement<HTMLButtonElement>(
       ".basket__item-delete",

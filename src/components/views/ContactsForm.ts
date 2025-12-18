@@ -1,7 +1,7 @@
-import { ensureElement } from "../../utils/utils.ts";
-import { IEvents } from "../base/Events.ts";
-import { Form, TForm } from "../views/Form.ts";
-import { IError } from "../../types/index.ts";
+import { ensureElement } from "../../utils/utils";
+import { IEvents } from "../base/Events";
+import { Form, TForm } from "./Form";
+import { IError } from "../../types";
 
 type TContactsForm = {
   emailElement: HTMLInputElement;
@@ -46,9 +46,7 @@ export class ContactsForm extends Form<TContactsForm> {
       }
     });
 
-    this.events.on("form:errors", (errors: IError) =>
-      this.validateForm(errors)
-    );
+    this.events.on("form:errors", (errors: IError) => this.validateForm(errors));
   }
 
   set emailValue(value: string) {

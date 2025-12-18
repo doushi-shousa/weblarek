@@ -1,6 +1,6 @@
-import { Component } from "../base/Component.ts";
-import { ensureElement, ensureAllElements } from "../../utils/utils.ts";
-import { IEvents } from "../base/Events.ts";
+import { Component } from "../base/Component";
+import { ensureElement, ensureAllElements } from "../../utils/utils";
+import { IEvents } from "../base/Events";
 
 export type TForm = {
   formElement: HTMLFormElement;
@@ -23,16 +23,9 @@ export class Form<T = {}> extends Component<TForm & T> {
         ? container
         : ensureElement<HTMLFormElement>(".form", this.container);
 
-    this.nextButton = ensureElement<HTMLButtonElement>(
-      ".button",
-      this.container
-    );
+    this.nextButton = ensureElement<HTMLButtonElement>(".button", this.container);
     this.formErrors = ensureElement<HTMLElement>(".form__errors", this.container);
-
-    this.formInputs = ensureAllElements<HTMLInputElement>(
-      ".form__input",
-      this.container
-    );
+    this.formInputs = ensureAllElements<HTMLInputElement>(".form__input", this.container);
   }
 
   set isButtonValid(value: boolean) {

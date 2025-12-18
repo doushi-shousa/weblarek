@@ -21,24 +21,35 @@ export class Customer {
     if (data.email !== undefined) this._email = data.email;
     if (data.phone !== undefined) this._phone = data.phone;
 
-    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() } as any);
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
     this.validateCustomerInfo();
   }
 
   set payment(value: TPayment | null) {
     this._payment = value;
-  }
-  set address(value: string) {
-    this._address = value;
-  }
-  set email(value: string) {
-    this._email = value;
-  }
-  set phone(value: string) {
-    this._phone = value;
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
+    this.validateCustomerInfo();
   }
 
-  // Возвращаем реальное состояние, без "as TPayment"
+  set address(value: string) {
+    this._address = value;
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
+    this.validateCustomerInfo();
+  }
+
+  set email(value: string) {
+    this._email = value;
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
+    this.validateCustomerInfo();
+  }
+
+  set phone(value: string) {
+    this._phone = value;
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
+    this.validateCustomerInfo();
+  }
+
+  // Возвращаем реальное состояние
   getCustomerInfo(): CustomerState {
     return {
       payment: this._payment,
@@ -54,7 +65,7 @@ export class Customer {
     this._email = '';
     this._phone = '';
 
-    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() } as any);
+    this.events?.emit('customer:changed', { customer: this.getCustomerInfo() });
     this.validateCustomerInfo();
   }
 
@@ -66,7 +77,7 @@ export class Customer {
     if (!this._email) errors.email = 'Укажите электронную почту';
     if (!this._phone) errors.phone = 'Введите номер телефона';
 
-    this.events?.emit('form:errors', errors as any);
+    this.events?.emit('form:errors', errors);
 
     return errors;
   }

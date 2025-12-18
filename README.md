@@ -24,7 +24,6 @@
 - `src/main.ts` — точка входа приложения (Presenter)
 - `src/scss/styles.scss` — корневой файл стилей
 - `src/utils/constants.ts` — файл с константами (в т.ч. адрес API и `categoryMap`)
-- `src/utils/data.ts` — мок-данные `apiProducts` (могут использоваться для локальных проверок)
 
 ---
 
@@ -198,48 +197,54 @@ export interface IOrderResponse {
 
 Назначение: хранит массив товаров каталога и выбранный товар для детального отображения.
 
+Конструктор:
+constructor(events?: IEvents)
+
 Поля:
 
-products: IProduct[] — массив всех товаров
+selected: IProduct | null
 
-selected: IProduct | null — выбранный товар
+products: IProduct[]
 
 Методы:
 
-setProducts(products: IProduct[]): void — сохранить массив товаров (эмитит catalog:changed)
+getSelected(): IProduct | null
 
-getProducts(): IProduct[] — получить массив товаров
+getProducts(): IProduct[]
 
-getProductById(id: string): IProduct | undefined — найти товар по id
+setSelected(product: IProduct | null): void — эмитит product:selected
 
-setSelected(product: IProduct | null): void — сохранить выбранный товар (эмитит product:selected)
+setProducts(products: IProduct[]): void — эмитит catalog:changed
 
-getSelected(): IProduct | null — получить выбранный товар
+getProductById(id: string): IProduct | undefined
 
 Корзина — Cart
 Файл: src/components/models/Cart.ts
 
 Назначение: хранит товары, выбранные для покупки.
 
+Конструктор:
+constructor(events?: IEvents)
+
 Поля:
 
-items: IProduct[] — массив товаров в корзине
+items: IProduct[]
 
 Методы:
 
-getItems(): IProduct[] — получить товары из корзины
+getItems(): IProduct[]
 
-addItem(product: IProduct): void — добавить товар (без дубликатов) (эмитит basket:changed)
+hasItem(productId: string): boolean
 
-removeItemById(itemId: string): void — удалить товар по id (эмитит basket:changed)
+addItem(product: IProduct): void — эмитит basket:changed
 
-clear(): void — очистить корзину (эмитит basket:changed)
+removeItemById(productId: string): void — эмитит basket:changed
 
-getTotal(): number — сумма всех товаров (если price === null, считается как 0)
+clear(): void — эмитит basket:changed
 
-getCount(): number — количество товаров
+getTotal(): number
 
-hasItem(productId: string): boolean — проверить наличие товара по id
+getCount(): number
 
 Покупатель — Customer
 Файл: src/components/models/Customer.ts
@@ -248,9 +253,12 @@ hasItem(productId: string): boolean — проверить наличие тов
 
 Типы:
 
-CustomerState — состояние покупателя (включая payment: TPayment | null)
+CustomerState = Omit<ICustomer, 'payment'> & { payment: TPayment | null }
 
-CustomerErrors — объект ошибок валидации (ключи — поля, значения — текст ошибки)
+CustomerErrors = Partial<Record<keyof CustomerState, string>>
+
+Конструктор:
+constructor(events?: IEvents)
 
 Поля:
 
@@ -264,13 +272,13 @@ _phone: string
 
 Методы:
 
-setCustomerInfo(data: Partial<CustomerState>): void — обновление данных частями (эмитит customer:changed, запускает валидацию)
+setCustomerInfo(data: Partial<CustomerState>): void — эмитит customer:changed, вызывает валидацию
 
-getCustomerInfo(): CustomerState — получить текущее состояние покупателя
+getCustomerInfo(): CustomerState
 
-clearCustomerInfo(): void — очистить данные покупателя (эмитит customer:changed, запускает валидацию)
+clearCustomerInfo(): void — эмитит customer:changed, вызывает валидацию
 
-validateCustomerInfo(): CustomerErrors — валидация полей, эмитит form:errors
+validateCustomerInfo(): CustomerErrors — эмитит form:errors
 
 Слой коммуникации
 ApiClient
@@ -280,42 +288,318 @@ ApiClient
 
 Конструктор:
 
-constructor(api: IApi) — принимает объект, реализующий IApi
+constructor(api: IApi)
 
 Методы:
 
-fetchProducts(): Promise<IProduct[]> — GET /product/, возвращает массив товаров (items)
+fetchProducts(): Promise<IProduct[]> — GET /product/, возвращает items
 
-sendOrder(order: IOrderRequest): Promise<IOrderResponse> — POST /order/, отправляет данные заказа и возвращает ответ сервера
+sendOrder(order: IOrderRequest): Promise<IOrderResponse> — POST /order/
 
 Слой представления (View)
 View-компоненты отвечают только за DOM и пользовательские действия. Данные не хранят.
 
-Файлы: src/components/views/*
+Gallery
+Файл: src/components/views/Gallery.ts
 
-Gallery — контейнер каталога на главной странице
+Назначение: контейнер каталога на главной странице.
 
-Header — шапка, кнопка корзины и счётчик товаров (эмитит basket:open)
+Конструктор:
+constructor(container?: HTMLElement)
 
-Modal — модальное окно (эмитит modal:close, закрывается по оверлею и крестику)
+Поля:
 
-Basket — отображение корзины (эмитит basket:ready)
+catalogElement: HTMLElement
 
-Form — базовый класс форм (ошибки, submit-кнопка)
+Методы/сеттеры:
 
-OrderForm — шаг 1 оформления (эмитит order:change, order:next)
+set catalog(items: HTMLElement[]): void
 
-ContactsForm — шаг 2 оформления (эмитит order:change, contacts:submit)
+Header
+Файл: src/components/views/Header.ts
 
-OrderSuccess — успешная оплата (эмитит success:closed)
+Назначение: шапка, кнопка корзины и счётчик товаров.
 
-Card — базовая карточка товара
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
 
-CardCatalog — карточка товара в каталоге (эмитит card:open)
+Поля:
 
-CardPreview — карточка товара в превью (эмитит card:add / card:delete, при price === null кнопка Недоступно)
+counterElement: HTMLElement
 
-CardBasket — элемент товара в корзине (эмитит card:delete)
+basketButton: HTMLButtonElement
+
+События:
+
+эмитит basket:open
+
+Методы/сеттеры:
+
+set counter(value: number): void
+
+Modal
+Файл: src/components/views/Modal.ts
+
+Назначение: модальное окно (не имеет наследников).
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+closeButton: HTMLButtonElement
+
+contentElement: HTMLElement
+
+События:
+
+эмитит modal:close (клик по оверлею / крестику)
+
+Методы/сеттеры:
+
+open(): void
+
+close(): void
+
+set content(element: HTMLElement): void
+
+Basket
+Файл: src/components/views/Basket.ts
+
+Назначение: отображение корзины.
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+listElements: HTMLElement
+
+priceElements: HTMLElement
+
+basketButton: HTMLButtonElement
+
+События:
+
+эмитит basket:ready
+
+Методы/сеттеры:
+
+set items(elements: HTMLElement[]): void
+
+set total(value: number): void
+
+Карточки (общий родитель Card)
+Card
+Файл: src/components/views/Card.ts
+
+Назначение: базовая карточка товара (id, title, price).
+
+Конструктор:
+constructor(container: HTMLElement)
+
+Поля:
+
+titleElement: HTMLElement
+
+priceElement: HTMLElement
+
+Методы/сеттеры:
+
+set id(value: string): void
+
+set title(value: string): void
+
+set price(value: number | null): void
+
+CardCatalog
+Файл: src/components/views/CardCatalog.ts
+
+Назначение: карточка товара в каталоге.
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+categoryElement: HTMLElement
+
+imageElement: HTMLImageElement
+
+События:
+
+эмитит card:open
+
+Методы/сеттеры:
+
+set category(value: string): void
+
+set image(value: string): void
+
+CardPreview
+Файл: src/components/views/CardPreview.ts
+
+Назначение: карточка товара для просмотра (в модальном окне).
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+categoryElement: HTMLElement
+
+imageElement: HTMLImageElement
+
+descriptionElement: HTMLElement
+
+cardButton: HTMLButtonElement
+
+События:
+
+эмитит card:add
+
+эмитит card:delete
+
+Методы/сеттеры:
+
+set category(value: string): void
+
+set image(value: string): void
+
+set description(value: string): void
+
+set inCart(value: boolean): void
+
+disableButton(): void — выставляет Недоступно и блокирует кнопку
+
+CardBasket
+Файл: src/components/views/CardBasket.ts
+
+Назначение: элемент товара в корзине.
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+indexElement: HTMLElement
+
+itemDeleteButton: HTMLButtonElement
+
+События:
+
+эмитит card:delete
+
+Методы/сеттеры:
+
+set index(value: number): void
+
+Формы (общий родитель Form)
+Form
+Файл: src/components/views/Form.ts
+
+Назначение: базовый класс формы (кнопка, ошибки, инпуты). Не содержит сценарной логики.
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+formElement: HTMLFormElement
+
+formErrors: HTMLElement
+
+nextButton: HTMLButtonElement
+
+formInputs: HTMLInputElement[]
+
+Методы/сеттеры:
+
+set isButtonValid(value: boolean): void
+
+set errors(text: string): void
+
+OrderForm
+Файл: src/components/views/OrderForm.ts
+
+Назначение: шаг 1 оформления (способ оплаты + адрес).
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+addressElement: HTMLInputElement
+
+cashButton: HTMLButtonElement
+
+cardButton: HTMLButtonElement
+
+События:
+
+эмитит order:change
+
+эмитит order:next
+
+Методы/сеттеры:
+
+set payment(value: TPayment): void
+
+set addressValue(value: string): void
+
+validateForm(errors: IError): void
+
+ContactsForm
+Файл: src/components/views/ContactsForm.ts
+
+Назначение: шаг 2 оформления (email + телефон).
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+emailElement: HTMLInputElement
+
+phoneElement: HTMLInputElement
+
+События:
+
+эмитит order:change
+
+эмитит contacts:submit
+
+Методы/сеттеры:
+
+set emailValue(value: string): void
+
+set phoneValue(value: string): void
+
+validateForm(errors: IError): void
+
+OrderSuccess
+Файл: src/components/views/OrderSuccess.ts
+
+Назначение: отображение сообщения об успешной оплате.
+
+Конструктор:
+constructor(events: IEvents, container: HTMLElement)
+
+Поля:
+
+titleElement: HTMLElement
+
+descriptionElement: HTMLElement
+
+closeButton: HTMLButtonElement
+
+События:
+
+эмитит success:closed
+
+Методы/сеттеры:
+
+set total(value: number): void
 
 События приложения
 События от View (UI)
@@ -344,7 +628,7 @@ catalog:changed { products: IProduct[] }
 
 product:selected { product: IProduct | null }
 
-basket:changed { items, count, total } (или аналогичный payload)
+basket:changed { items, count, total } (payload из Cart)
 
 customer:changed { customer }
 
@@ -355,11 +639,13 @@ form:errors CustomerErrors
 
 Назначение: связывает Model и View.
 
-Подписывается на события от моделей (catalog:changed, basket:changed, product:selected, …) и обновляет UI.
+подписывается на события от моделей (catalog:changed, basket:changed, product:selected, …) и обновляет UI;
 
-Подписывается на события от View (card:*, basket:*, order:*, …) и вызывает методы моделей/открывает модальные окна.
+подписывается на события от View (card:*, basket:*, order:*, …) и вызывает методы моделей/открывает модальные окна;
 
-Не эмитит событий сам — только обрабатывает.
+не эмитит событий сам — только обрабатывает;
+
+перерисовка выполняется при событиях изменения данных в моделях и при открытии модальных окон.
 
 Проверка работы
 Ручная проверка сценариев в интерфейсе:

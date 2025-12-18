@@ -1,6 +1,6 @@
-import { Component } from "../base/Component.ts";
-import { ensureElement } from "../../utils/utils.ts";
-import { IProduct } from "../../types/index.ts";
+import { Component } from "../base/Component";
+import { ensureElement } from "../../utils/utils";
+import { IProduct } from "../../types";
 
 export type TCard = Pick<IProduct, "title" | "price" | "id">;
 

@@ -1,8 +1,8 @@
-import { IEvents } from "../base/Events.ts";
-import { ensureElement } from "../../utils/utils.ts";
-import { IProduct } from "../../types/index.ts";
-import { Card, TCard } from "./Card.ts";
-import { categoryMap, CDN_URL } from "../../utils/constants.ts";
+import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
+import { IProduct } from "../../types";
+import { Card, TCard } from "./Card";
+import { categoryMap, CDN_URL } from "../../utils/constants";
 
 export type TCardCatalog = Pick<IProduct, "category" | "image"> & TCard;
 
@@ -24,8 +24,7 @@ export class CardCatalog extends Card<TCardCatalog> {
   set category(value: string) {
     this.categoryElement.textContent = value;
 
-    // categoryMap в твоём проекте: Record<string, string>
-    // (ключ: название категории, значение: модификатор класса)
+    // categoryMap: Record<string, string> (название категории -> модификатор)
     Object.values(categoryMap).forEach((cls) => {
       this.categoryElement.classList.remove(`card__category_${cls}`);
     });

@@ -17,12 +17,12 @@ export class Product {
 
   setSelected(product: IProduct | null): void {
     this.selected = product;
-    this.events?.emit("product:selected", { product });
+    this.events?.emit('product:selected', { product });
   }
 
   setProducts(products: IProduct[]): void {
     this.products = [...products];
-    this.events?.emit("catalog:changed", { products: this.getProducts() });
+    this.events?.emit('catalog:changed', { products: this.getProducts() });
   }
 
   getProductById(id: string): IProduct | undefined {

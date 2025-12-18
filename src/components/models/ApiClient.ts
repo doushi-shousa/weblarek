@@ -9,9 +9,7 @@ export class ApiClient {
   constructor(private readonly api: IApi) {}
 
   fetchProducts(): Promise<IProduct[]> {
-    return this.api
-      .get<ProductsResponse>('/product/')
-      .then((res) => res.items);
+    return this.api.get<ProductsResponse>('/product/').then((res) => res.items);
   }
 
   sendOrder(order: IOrderRequest): Promise<IOrderResponse> {

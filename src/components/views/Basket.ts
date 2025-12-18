@@ -1,6 +1,6 @@
-import { Component } from "../base/Component.ts";
-import { IEvents } from "../base/Events.ts";
-import { ensureElement } from "../../utils/utils.ts";
+import { Component } from "../base/Component";
+import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
 
 interface IBasket {
   items: HTMLElement[];
@@ -15,29 +15,18 @@ export class Basket extends Component<IBasket> {
   constructor(protected events: IEvents, container: HTMLElement) {
     super(container);
 
-    this.listElements = ensureElement<HTMLElement>(
-      ".basket__list",
-      this.container
-    );
-    this.priceElements = ensureElement<HTMLElement>(
-      ".basket__price",
-      this.container
-    );
-    this.basketButton = ensureElement<HTMLButtonElement>(
-      ".basket__button",
-      this.container
-    );
+    this.listElements = ensureElement<HTMLElement>(".basket__list", this.container);
+    this.priceElements = ensureElement<HTMLElement>(".basket__price", this.container);
+    this.basketButton = ensureElement<HTMLButtonElement>(".basket__button", this.container);
 
-    this.basketButton.addEventListener("click", () =>
-      this.events.emit("basket:ready")
-    );
+    this.basketButton.addEventListener("click", () => this.events.emit("basket:ready"));
   }
 
   set items(elements: HTMLElement[]) {
     const isEmpty = elements.length === 0;
 
     if (isEmpty) {
-      this.listElements.innerHTML = "<div>Корзина пуста</div>";
+      this.listElements.textContent = "Корзина пуста";
       this.listElements.classList.add("basket__list_empty");
       this.basketButton.disabled = true;
     } else {
@@ -46,10 +35,7 @@ export class Basket extends Component<IBasket> {
       this.basketButton.disabled = false;
     }
 
-    this.listElements.classList.toggle(
-      "basket__list_scroll",
-      elements.length > 4
-    );
+    this.listElements.classList.toggle("basket__list_scroll", elements.length > 4);
   }
 
   set total(value: number) {

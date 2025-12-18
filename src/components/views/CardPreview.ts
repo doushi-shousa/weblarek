@@ -1,8 +1,8 @@
-import { IEvents } from "../base/Events.ts";
-import { ensureElement } from "../../utils/utils.ts";
-import { IProduct } from "../../types/index.ts";
-import { Card, TCard } from "./Card.ts";
-import { categoryMap, CDN_URL } from "../../utils/constants.ts";
+import { IEvents } from "../base/Events";
+import { ensureElement } from "../../utils/utils";
+import { IProduct } from "../../types";
+import { Card, TCard } from "./Card";
+import { categoryMap, CDN_URL } from "../../utils/constants";
 
 export type TCardPreview =
   Pick<IProduct, "category" | "image" | "description"> &
@@ -36,7 +36,7 @@ export class CardPreview extends Card<TCardPreview> {
   set category(value: string) {
     this.categoryElement.textContent = value;
 
-    // categoryMap в твоём проекте: Record<string, string>
+    // categoryMap: Record<string, string> (название категории -> модификатор)
     Object.values(categoryMap).forEach((cls) => {
       this.categoryElement.classList.remove(`card__category_${cls}`);
     });

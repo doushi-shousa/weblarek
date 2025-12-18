@@ -87,7 +87,10 @@ function renderHeader() {
 function renderCatalog(products: IProduct[]) {
   // 🛍️ Каталог товаров — карточки на главной
   const cards = products.map((product) => {
-    const card = new CardCatalog(events, cloneTemplate<HTMLElement>("#card-catalog"));
+    const card = new CardCatalog(
+      events,
+      cloneTemplate<HTMLElement>("#card-catalog")
+    );
     return card.render({
       id: product.id,
       title: product.title,
@@ -151,7 +154,7 @@ function openOrder() {
 
   // payment в модели может быть null — в форму подставляем только если выбран
   if (info.payment) {
-    form.payment = info.payment as TPayment;
+    form.payment = info.payment;
   }
 
   // Прогоняем валидацию, чтобы подсветились ошибки/кнопка
@@ -244,6 +247,7 @@ events.on("basket:ready", () => {
 
 events.on<{ field: string; value: string }>("order:change", ({ field, value }) => {
   // Любое изменение в формах → записываем в модель покупателя
+  // (payment здесь приходит как string, но по факту это 'cash' | 'card')
   customerModel.setCustomerInfo({ [field]: value } as any);
 });
 
@@ -256,10 +260,12 @@ events.on("contacts:submit", async () => {
   // Оплатить → отправляем заказ на сервер
   const customer = customerModel.getCustomerInfo();
 
+  // На момент оплаты способ оплаты должен быть выбран.
+  // Если вдруг null — подстрахуемся, чтобы TS не ругался.
+  const payment = (customer.payment ?? "card") as TPayment;
+
   const payload = {
-    // На момент оплаты способ оплаты должен быть выбран.
-    // Если вдруг null — подстрахуемся, чтобы TS не ругался.
-    payment: (customer.payment ?? "card") as TPayment,
+    payment,
     email: customer.email,
     phone: customer.phone,
     address: customer.address,
@@ -268,8 +274,7 @@ events.on("contacts:submit", async () => {
   };
 
   try {
-    // В ApiClient метод должен существовать: sendOrder(payload)
-    const res: IOrderResponse = await (apiClient as any).sendOrder(payload);
+    const res: IOrderResponse = await apiClient.sendOrder(payload as any);
 
     // ✅ Успех → чистим данные (как в ТЗ) и показываем сообщение
     cartModel.clear();

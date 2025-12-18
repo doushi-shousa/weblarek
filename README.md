@@ -2,28 +2,26 @@
 
 Стек: **HTML**, **SCSS**, **TypeScript**, **Vite**
 
-Проект — интернет-магазин с товарами для веб-разработчиков. Реализована архитектура **MVP (Model-View-Presenter)**: слой данных (каталог, корзина, покупатель), слой представления (UI-компоненты) и слой логики (Presenter в `main.ts`) + коммуникация с сервером через API-клиент.
+Проект — интернет-магазин с товарами для веб-разработчиков. Реализована архитектура **MVP (Model–View–Presenter)**: слой данных (каталог, корзина, покупатель), слой представления (UI-компоненты) и слой логики (Presenter в `main.ts`) + коммуникация с сервером через API-клиент.
 
 ---
 
 ## Структура проекта
 
-- `src/` — исходные файлы проекта
-- `src/components/` — компоненты приложения
-- `src/components/base/` — базовый код (Api, EventEmitter, Component и т.д.)
-- `src/components/models/` — модели данных и коммуникационный клиент
-- `src/components/views/` — компоненты представления (UI)
-- `src/types/index.ts` — типы и интерфейсы
-- `src/utils/` — константы и утилиты
-- `src/scss/styles.scss` — корневой файл стилей
-- `src/main.ts` — точка входа приложения (**Presenter**)
+* `src/` — исходные файлы проекта
+* `src/components/` — компоненты приложения
+* `src/components/base/` — базовый код (Api, EventEmitter, Component и т.д.)
+* `src/components/models/` — модели данных и API-клиент
+* `src/components/views/` — компоненты представления (UI)
+* `src/types/index.ts` — типы и интерфейсы
+* `src/utils/` — константы и утилиты
+* `src/scss/styles.scss` — корневой файл стилей
+* `src/main.ts` — точка входа приложения (**Presenter**)
 
 Важные файлы:
-- `index.html` — HTML-файл главной страницы (включая `<template>` для компонентов)
-- `src/types/index.ts` — файл с типами
-- `src/main.ts` — точка входа приложения (Presenter)
-- `src/scss/styles.scss` — корневой файл стилей
-- `src/utils/constants.ts` — файл с константами (в т.ч. адрес API и `categoryMap`)
+
+* `index.html` — HTML-файл главной страницы (включая `<template>` для компонентов)
+* `src/utils/constants.ts` — константы (в т.ч. `API_URL`, `CDN_URL`, `categoryMap`)
 
 ---
 
@@ -33,118 +31,137 @@
 
 ```bash
 npm install
+```
+
 или
 
-bash
-Копировать код
+```bash
 yarn
-2) Переменные окружения (.env)
-Создайте файл .env в корне проекта и добавьте:
+```
 
-env
-Копировать код
+### 2) Переменные окружения (.env)
+
+Создайте файл `.env` в корне проекта и добавьте:
+
+```env
 VITE_API_ORIGIN=https://larek-api.nomoreparties.co
-Важно: адрес указывается без слеша в конце.
-Полные пути запросов берутся из констант (например, src/utils/constants.ts).
+```
 
-3) Запуск в режиме разработки
-bash
-Копировать код
+> Важно: адрес указывается **без слеша** в конце.
+
+### 3) Запуск в режиме разработки
+
+```bash
 npm run dev
+```
+
 или
 
-bash
-Копировать код
+```bash
 yarn dev
-Сборка
-bash
-Копировать код
+```
+
+---
+
+## Сборка
+
+```bash
 npm run build
+```
+
 или
 
-bash
-Копировать код
+```bash
 yarn build
-Интернет-магазин «Web-Larёk»
+```
+
+---
+
+## Интернет-магазин «Web-Larёk»
+
 «Web-Larёk» — интернет-магазин, где пользователи могут просматривать каталог товаров, добавлять товары в корзину и оформлять заказы. В интерфейсе используются модальные окна для просмотра карточек товара, корзины и форм оформления заказа.
 
-Архитектура приложения
-Код приложения разделён на слои согласно парадигме MVP (Model-View-Presenter), которая обеспечивает чёткое разделение ответственности:
+---
 
-Model — слой данных: хранение состояния и операции над данными.
+## Архитектура приложения
 
-View — слой представления: отображение данных на странице, генерация событий пользовательских действий.
+Код приложения разделён на слои согласно парадигме **MVP (Model–View–Presenter)**:
 
-Presenter — слой логики: связывает View и Model, подписывается на события и управляет сценарием приложения.
+* **Model** — слой данных: хранение состояния и операции над данными.
+* **View** — слой представления: отображение данных в DOM и генерация событий пользовательских действий.
+* **Presenter** — слой логики: подписывается на события, связывает модели и представления, управляет сценариями.
 
-Взаимодействие между классами обеспечивается событийно-ориентированным подходом: модели и представления генерируют события, а презентер подписывается на них и реагирует, вызывая методы моделей/представлений.
+Взаимодействие реализовано событийно-ориентированно: модели и представления эмитят события через `EventEmitter`, презентер их обрабатывает.
 
-Базовый код
-Класс Component
-Базовый класс для всех компонентов интерфейса. Класс является дженериком и принимает в T тип данных, которые могут быть переданы в метод render.
+---
 
-Конструктор:
-constructor(container: HTMLElement) — принимает DOM-элемент, за отображение которого отвечает компонент.
+## Базовый код
 
-Поля:
+### `Component<T>`
 
-container: HTMLElement — корневой DOM-элемент компонента.
+Базовый класс для компонентов интерфейса.
 
-Методы:
+**Конструктор:**
 
-render(data?: Partial<T>): HTMLElement — принимает данные для отображения, записывает их в поля класса и возвращает DOM-элемент.
+* `constructor(container: HTMLElement)`
 
-setImage(element: HTMLImageElement, src: string, alt?: string): void — утилитарный метод для установки изображения.
+**Поля:**
 
-Класс Api
-Содержит базовую логику отправки запросов.
+* `container: HTMLElement` — корневой DOM-элемент компонента.
 
-Конструктор:
-constructor(baseUrl: string, options: RequestInit = {})
+**Методы:**
 
-Поля:
+* `render(data?: Partial<T>): HTMLElement` — применяет данные (через сеттеры) и возвращает `container`.
+* `setImage(element: HTMLImageElement, src: string, alt?: string): void` — утилита для установки изображения.
 
-baseUrl: string — базовый адрес сервера
+### `Api`
 
-options: RequestInit — настройки запросов
+Базовый класс для HTTP-запросов.
 
-Методы:
+**Конструктор:**
 
-get(uri: string): Promise<object> — GET запрос на эндпоинт
+* `constructor(baseUrl: string, options: RequestInit = {})`
 
-post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object> — отправка данных на эндпоинт
+**Поля:**
 
-handleResponse(response: Response): Promise<object> — проверка ответа сервера и преобразование в объект/ошибку
+* `baseUrl: string`
+* `options: RequestInit`
 
-Класс EventEmitter
-Брокер событий реализует паттерн «Наблюдатель», позволяя отправлять события и подписываться на них.
+**Методы:**
 
-Поля:
+* `get<T extends object>(uri: string): Promise<T>`
+* `post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>`
+* `handleResponse(response: Response): Promise<object>`
 
-_events: Map<string | RegExp, Set<Function>> — хранилище подписок на события.
+### `EventEmitter`
 
-Методы:
+Брокер событий (паттерн «Наблюдатель»).
 
-on<T extends object>(event: EventName, callback: (data: T) => void): void — подписка на событие
+**Поля:**
 
-emit<T extends object>(event: string, data?: T): void — генерация события
+* `_events: Map<string | RegExp, Set<Function>>`
 
-trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void — фабрика обработчика события
+**Методы:**
 
-Данные
-Типы и интерфейсы описаны в src/types/index.ts.
+* `on<T extends object>(event: EventName, callback: (data: T) => void): void`
+* `emit<T extends object>(event: string, data?: T): void`
+* `trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void`
 
-TPayment
-Способ оплаты:
+---
 
-ts
-Копировать код
+## Данные и типы
+
+Типы и интерфейсы описаны в `src/types/index.ts`.
+
+### `TPayment`
+
+```ts
 export type TPayment = 'cash' | 'card';
-IProduct
-Данные товара:
+```
 
-ts
-Копировать код
+### `IProduct`
+
+```ts
 export interface IProduct {
   id: string;
   description: string;
@@ -153,511 +170,482 @@ export interface IProduct {
   category: string;
   price: number | null;
 }
-price может быть null — такой товар в UI считается недоступным для покупки.
+```
 
-ICustomer
-Данные покупателя:
+`price` может быть `null` — такой товар в UI считается недоступным для покупки.
 
-ts
-Копировать код
+### `ICustomer`
+
+```ts
 export interface ICustomer {
   payment: TPayment;
   email: string;
   phone: string;
   address: string;
 }
-Внутри модели Customer поле payment хранится как TPayment | null, пока пользователь не выберет способ оплаты (удобно для валидации).
+```
 
-IOrderRequest
-Данные, отправляемые при оформлении заказа (POST /order/):
+### `IOrderRequest`
 
-ts
-Копировать код
+```ts
 export interface IOrderRequest extends ICustomer {
   items: string[];
   total: number;
 }
-items — массив идентификаторов товаров (id), которые входят в заказ
-total — итоговая сумма заказа
+```
 
-IOrderResponse
-Ответ сервера при успешном оформлении заказа:
+### `IOrderResponse`
 
-ts
-Копировать код
+```ts
 export interface IOrderResponse {
   id: string;
   total: number;
 }
-Модели данных
-Модели данных отвечают только за хранение и управление данными. Они не работают с DOM и не зависят от UI.
+```
 
-Каталог товаров — Product
-Файл: src/components/models/Product.ts
+---
 
-Назначение: хранит массив товаров каталога и выбранный товар для детального отображения.
+## Модели данных (Model)
 
-Конструктор:
-constructor(events?: IEvents)
+Модели не взаимодействуют с DOM и эмитят события при изменении состояния.
 
-Поля:
+### `Product`
 
-selected: IProduct | null
+Файл: `src/components/models/Product.ts`
 
-products: IProduct[]
+**Назначение:** хранит каталог товаров и выбранный товар.
 
-Методы:
+**Конструктор:**
 
-getSelected(): IProduct | null
+* `constructor(events?: IEvents)`
 
-getProducts(): IProduct[]
+**Поля:**
 
-setSelected(product: IProduct | null): void — эмитит product:selected
+* `selected: IProduct | null`
+* `products: IProduct[]`
 
-setProducts(products: IProduct[]): void — эмитит catalog:changed
+**Методы:**
 
-getProductById(id: string): IProduct | undefined
+* `getSelected(): IProduct | null`
+* `getProducts(): IProduct[]`
+* `setSelected(product: IProduct | null): void` — эмитит `product:selected`
+* `setProducts(products: IProduct[]): void` — эмитит `catalog:changed`
+* `getProductById(id: string): IProduct | undefined`
 
-Корзина — Cart
-Файл: src/components/models/Cart.ts
+### `Cart`
 
-Назначение: хранит товары, выбранные для покупки.
+Файл: `src/components/models/Cart.ts`
 
-Конструктор:
-constructor(events?: IEvents)
+**Назначение:** хранит товары, выбранные для покупки.
 
-Поля:
+**Конструктор:**
 
-items: IProduct[]
+* `constructor(events?: IEvents)`
 
-Методы:
+**Поля:**
 
-getItems(): IProduct[]
+* `items: IProduct[]`
 
-hasItem(productId: string): boolean
+**Методы:**
 
-addItem(product: IProduct): void — эмитит basket:changed
+* `getItems(): IProduct[]`
+* `hasItem(productId: string): boolean`
+* `addItem(product: IProduct): void` — эмитит `basket:changed`
+* `removeItemById(productId: string): void` — эмитит `basket:changed`
+* `clear(): void` — эмитит `basket:changed`
+* `getCount(): number`
+* `getTotal(): number`
 
-removeItemById(productId: string): void — эмитит basket:changed
+### `Customer`
 
-clear(): void — эмитит basket:changed
+Файл: `src/components/models/Customer.ts`
 
-getTotal(): number
+**Назначение:** хранит данные покупателя и выполняет валидацию.
 
-getCount(): number
+**Типы:**
 
-Покупатель — Customer
-Файл: src/components/models/Customer.ts
+* `CustomerState = Omit<ICustomer, 'payment'> & { payment: TPayment | null }`
+* `CustomerErrors = Partial<Record<keyof CustomerState, string>>`
 
-Назначение: хранит данные покупателя, умеет очищать и валидировать поля.
+**Конструктор:**
 
-Типы:
+* `constructor(events?: IEvents)`
 
-CustomerState = Omit<ICustomer, 'payment'> & { payment: TPayment | null }
+**Поля:**
 
-CustomerErrors = Partial<Record<keyof CustomerState, string>>
+* `_payment: TPayment | null`
+* `_address: string`
+* `_email: string`
+* `_phone: string`
 
-Конструктор:
-constructor(events?: IEvents)
+**Методы:**
 
-Поля:
+* `setCustomerInfo(data: Partial<CustomerState>): void` — эмитит `customer:changed`, вызывает валидацию
+* `getCustomerInfo(): CustomerState`
+* `clearCustomerInfo(): void` — эмитит `customer:changed`, вызывает валидацию
+* `validateCustomerInfo(): CustomerErrors` — эмитит `form:errors`
 
-_payment: TPayment | null
+---
 
-_address: string
+## Слой коммуникации
 
-_email: string
+### `ApiClient`
 
-_phone: string
+Файл: `src/components/models/ApiClient.ts`
 
-Методы:
+**Назначение:** взаимодействие с сервером через композицию с `Api`.
 
-setCustomerInfo(data: Partial<CustomerState>): void — эмитит customer:changed, вызывает валидацию
+**Конструктор:**
 
-getCustomerInfo(): CustomerState
+* `constructor(api: IApi)`
 
-clearCustomerInfo(): void — эмитит customer:changed, вызывает валидацию
+**Методы:**
 
-validateCustomerInfo(): CustomerErrors — эмитит form:errors
+* `fetchProducts(): Promise<IProduct[]>` — GET `/product/`, возвращает `items`
+* `sendOrder(order: IOrderRequest): Promise<IOrderResponse>` — POST `/order/`
 
-Слой коммуникации
-ApiClient
-Файл: src/components/models/ApiClient.ts
+---
 
-Назначение: изолирует сетевое взаимодействие с сервером и предоставляет методы получения каталога и отправки заказа.
+## Слой представления (View)
 
-Конструктор:
-
-constructor(api: IApi)
-
-Методы:
-
-fetchProducts(): Promise<IProduct[]> — GET /product/, возвращает items
-
-sendOrder(order: IOrderRequest): Promise<IOrderResponse> — POST /order/
-
-Слой представления (View)
 View-компоненты отвечают только за DOM и пользовательские действия. Данные не хранят.
 
-Gallery
-Файл: src/components/views/Gallery.ts
+### `Gallery`
 
-Назначение: контейнер каталога на главной странице.
+Файл: `src/components/views/Gallery.ts`
 
-Конструктор:
-constructor(container?: HTMLElement)
+**Назначение:** контейнер каталога на главной странице.
 
-Поля:
+**Конструктор:**
 
-catalogElement: HTMLElement
+* `constructor(container?: HTMLElement)`
 
-Методы/сеттеры:
+**Поля:**
 
-set catalog(items: HTMLElement[]): void
+* `catalogElement: HTMLElement`
 
-Header
-Файл: src/components/views/Header.ts
+**Сеттеры:**
 
-Назначение: шапка, кнопка корзины и счётчик товаров.
+* `set catalog(items: HTMLElement[])`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+### `Header`
 
-Поля:
+Файл: `src/components/views/Header.ts`
 
-counterElement: HTMLElement
+**Назначение:** шапка, кнопка корзины и счётчик.
 
-basketButton: HTMLButtonElement
+**Конструктор:**
 
-События:
+* `constructor(events: IEvents, container: HTMLElement)`
 
-эмитит basket:open
+**Поля:**
 
-Методы/сеттеры:
+* `counterElement: HTMLElement`
+* `basketButton: HTMLButtonElement`
 
-set counter(value: number): void
+**События:**
 
-Modal
-Файл: src/components/views/Modal.ts
+* эмитит `basket:open`
 
-Назначение: модальное окно (не имеет наследников).
+**Сеттеры:**
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+* `set counter(value: number)`
 
-Поля:
+### `Modal`
 
-closeButton: HTMLButtonElement
+Файл: `src/components/views/Modal.ts`
 
-contentElement: HTMLElement
+**Назначение:** модальное окно (без наследников).
 
-События:
+**Конструктор:**
 
-эмитит modal:close (клик по оверлею / крестику)
+* `constructor(events: IEvents, container: HTMLElement)`
 
-Методы/сеттеры:
+**Поля:**
 
-open(): void
+* `closeButton: HTMLButtonElement`
+* `contentElement: HTMLElement`
 
-close(): void
+**События:**
 
-set content(element: HTMLElement): void
+* эмитит `modal:close`
 
-Basket
-Файл: src/components/views/Basket.ts
+**Методы/сеттеры:**
 
-Назначение: отображение корзины.
+* `open(): void`
+* `close(): void`
+* `set content(element: HTMLElement)`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+### `Basket`
 
-Поля:
+Файл: `src/components/views/Basket.ts`
 
-listElements: HTMLElement
+**Назначение:** отображение корзины.
 
-priceElements: HTMLElement
+**Конструктор:**
 
-basketButton: HTMLButtonElement
+* `constructor(events: IEvents, container: HTMLElement)`
 
-События:
+**Поля:**
 
-эмитит basket:ready
+* `listElements: HTMLElement`
+* `priceElements: HTMLElement`
+* `basketButton: HTMLButtonElement`
 
-Методы/сеттеры:
+**События:**
 
-set items(elements: HTMLElement[]): void
+* эмитит `basket:ready`
 
-set total(value: number): void
+**Сеттеры:**
 
-Карточки (общий родитель Card)
-Card
-Файл: src/components/views/Card.ts
+* `set items(elements: HTMLElement[])`
+* `set total(value: number)`
 
-Назначение: базовая карточка товара (id, title, price).
+### Карточки товара (общий родитель)
 
-Конструктор:
-constructor(container: HTMLElement)
+#### `Card`
 
-Поля:
+Файл: `src/components/views/Card.ts`
 
-titleElement: HTMLElement
+**Назначение:** базовая карточка товара (id, title, price).
 
-priceElement: HTMLElement
+**Конструктор:**
 
-Методы/сеттеры:
+* `constructor(container: HTMLElement)`
 
-set id(value: string): void
+**Поля:**
 
-set title(value: string): void
+* `titleElement: HTMLElement`
+* `priceElement: HTMLElement`
 
-set price(value: number | null): void
+**Сеттеры:**
 
-CardCatalog
-Файл: src/components/views/CardCatalog.ts
+* `set id(value: string)`
+* `set title(value: string)`
+* `set price(value: number | null)`
 
-Назначение: карточка товара в каталоге.
+#### `CardCatalog`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+Файл: `src/components/views/CardCatalog.ts`
 
-Поля:
+**Назначение:** карточка товара в каталоге.
 
-categoryElement: HTMLElement
+**Конструктор:**
 
-imageElement: HTMLImageElement
+* `constructor(events: IEvents, container: HTMLElement)`
 
-События:
+**Поля:**
 
-эмитит card:open
+* `categoryElement: HTMLElement`
+* `imageElement: HTMLImageElement`
 
-Методы/сеттеры:
+**События:**
 
-set category(value: string): void
+* эмитит `card:open`
 
-set image(value: string): void
+**Сеттеры:**
 
-CardPreview
-Файл: src/components/views/CardPreview.ts
+* `set category(value: string)`
+* `set image(value: string)`
 
-Назначение: карточка товара для просмотра (в модальном окне).
+#### `CardPreview`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+Файл: `src/components/views/CardPreview.ts`
 
-Поля:
+**Назначение:** карточка товара для просмотра (в модальном окне).
 
-categoryElement: HTMLElement
+**Конструктор:**
 
-imageElement: HTMLImageElement
+* `constructor(events: IEvents, container: HTMLElement)`
 
-descriptionElement: HTMLElement
+**Поля:**
 
-cardButton: HTMLButtonElement
+* `categoryElement: HTMLElement`
+* `imageElement: HTMLImageElement`
+* `descriptionElement: HTMLElement`
+* `cardButton: HTMLButtonElement`
 
-События:
+**События:**
 
-эмитит card:add
+* эмитит `card:add` / `card:delete`
 
-эмитит card:delete
+**Сеттеры/методы:**
 
-Методы/сеттеры:
+* `set category(value: string)`
+* `set image(value: string)`
+* `set description(value: string)`
+* `set inCart(value: boolean)`
+* `disableButton(): void`
 
-set category(value: string): void
+#### `CardBasket`
 
-set image(value: string): void
+Файл: `src/components/views/CardBasket.ts`
 
-set description(value: string): void
+**Назначение:** элемент товара в корзине.
 
-set inCart(value: boolean): void
+**Конструктор:**
 
-disableButton(): void — выставляет Недоступно и блокирует кнопку
+* `constructor(events: IEvents, container: HTMLElement)`
 
-CardBasket
-Файл: src/components/views/CardBasket.ts
+**Поля:**
 
-Назначение: элемент товара в корзине.
+* `indexElement: HTMLElement`
+* `itemDeleteButton: HTMLButtonElement`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+**События:**
 
-Поля:
+* эмитит `card:delete`
 
-indexElement: HTMLElement
+**Сеттеры:**
 
-itemDeleteButton: HTMLButtonElement
+* `set index(value: number)`
 
-События:
+### Формы (общий родитель)
 
-эмитит card:delete
+#### `Form`
 
-Методы/сеттеры:
+Файл: `src/components/views/Form.ts`
 
-set index(value: number): void
+**Назначение:** базовый класс формы (ошибки и submit-кнопка). Не содержит бизнес-логики.
 
-Формы (общий родитель Form)
-Form
-Файл: src/components/views/Form.ts
+**Конструктор:**
 
-Назначение: базовый класс формы (кнопка, ошибки, инпуты). Не содержит сценарной логики.
+* `constructor(events: IEvents, container: HTMLElement)`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+**Поля:**
 
-Поля:
+* `formElement: HTMLFormElement`
+* `formErrors: HTMLElement`
+* `nextButton: HTMLButtonElement`
+* `formInputs: HTMLInputElement[]`
 
-formElement: HTMLFormElement
+**Сеттеры:**
 
-formErrors: HTMLElement
+* `set isButtonValid(value: boolean)`
+* `set errors(text: string)`
 
-nextButton: HTMLButtonElement
+#### `OrderForm`
 
-formInputs: HTMLInputElement[]
+Файл: `src/components/views/OrderForm.ts`
 
-Методы/сеттеры:
+**Назначение:** шаг 1 оформления (оплата + адрес).
 
-set isButtonValid(value: boolean): void
+**Конструктор:**
 
-set errors(text: string): void
+* `constructor(events: IEvents, container: HTMLElement)`
 
-OrderForm
-Файл: src/components/views/OrderForm.ts
+**Поля:**
 
-Назначение: шаг 1 оформления (способ оплаты + адрес).
+* `addressElement: HTMLInputElement`
+* `cashButton: HTMLButtonElement`
+* `cardButton: HTMLButtonElement`
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+**События:**
 
-Поля:
+* эмитит `order:change`, `order:next`
 
-addressElement: HTMLInputElement
+**Сеттеры/методы:**
 
-cashButton: HTMLButtonElement
+* `set payment(value: TPayment)`
+* `set addressValue(value: string)`
+* `validateForm(errors: IError): void`
 
-cardButton: HTMLButtonElement
+#### `ContactsForm`
 
-События:
+Файл: `src/components/views/ContactsForm.ts`
 
-эмитит order:change
+**Назначение:** шаг 2 оформления (email + телефон).
 
-эмитит order:next
+**Конструктор:**
 
-Методы/сеттеры:
+* `constructor(events: IEvents, container: HTMLElement)`
 
-set payment(value: TPayment): void
+**Поля:**
 
-set addressValue(value: string): void
+* `emailElement: HTMLInputElement`
+* `phoneElement: HTMLInputElement`
 
-validateForm(errors: IError): void
+**События:**
 
-ContactsForm
-Файл: src/components/views/ContactsForm.ts
+* эмитит `order:change`, `contacts:submit`
 
-Назначение: шаг 2 оформления (email + телефон).
+**Сеттеры/методы:**
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+* `set emailValue(value: string)`
+* `set phoneValue(value: string)`
+* `validateForm(errors: IError): void`
 
-Поля:
+### `OrderSuccess`
 
-emailElement: HTMLInputElement
+Файл: `src/components/views/OrderSuccess.ts`
 
-phoneElement: HTMLInputElement
+**Назначение:** сообщение об успешной оплате.
 
-События:
+**Конструктор:**
 
-эмитит order:change
+* `constructor(events: IEvents, container: HTMLElement)`
 
-эмитит contacts:submit
+**Поля:**
 
-Методы/сеттеры:
+* `titleElement: HTMLElement`
+* `descriptionElement: HTMLElement`
+* `closeButton: HTMLButtonElement`
 
-set emailValue(value: string): void
+**События:**
 
-set phoneValue(value: string): void
+* эмитит `success:closed`
 
-validateForm(errors: IError): void
+**Сеттеры:**
 
-OrderSuccess
-Файл: src/components/views/OrderSuccess.ts
+* `set total(value: number)`
 
-Назначение: отображение сообщения об успешной оплате.
+---
 
-Конструктор:
-constructor(events: IEvents, container: HTMLElement)
+## События приложения
 
-Поля:
+### События от View (UI)
 
-titleElement: HTMLElement
+* `basket:open`
+* `modal:close`
+* `card:open` `{ card: string }`
+* `card:add` `{ card: string }`
+* `card:delete` `{ card: string }`
+* `basket:ready`
+* `order:change` `{ field: string, value: string }`
+* `order:next`
+* `contacts:submit`
+* `success:closed`
 
-descriptionElement: HTMLElement
+### События от Models
 
-closeButton: HTMLButtonElement
+* `catalog:changed` `{ products: IProduct[] }`
+* `product:selected` `{ product: IProduct | null }`
+* `basket:changed` `{ items, count, total }` (payload из `Cart`)
+* `customer:changed` `{ customer }`
+* `form:errors` `CustomerErrors`
 
-События:
+---
 
-эмитит success:closed
+## Презентер (Presenter)
 
-Методы/сеттеры:
+Файл: `src/main.ts`.
 
-set total(value: number): void
+**Назначение:** связывает Model и View:
 
-События приложения
-События от View (UI)
-basket:open
+* подписывается на события от моделей (`catalog:changed`, `basket:changed`, `product:selected`, …) и обновляет UI;
+* подписывается на события от View (`card:*`, `basket:*`, `order:*`, …) и вызывает методы моделей / открывает модальные окна;
+* **не эмитит событий сам** — только обрабатывает;
+* перерисовка выполняется при событиях изменения данных в моделях и при открытии модальных окон.
 
-modal:close
+---
 
-card:open { card: string }
+## Проверка работы
 
-card:add { card: string }
-
-card:delete { card: string }
-
-basket:ready
-
-order:change { field: string, value: string }
-
-order:next
-
-contacts:submit
-
-success:closed
-
-События от Models
-catalog:changed { products: IProduct[] }
-
-product:selected { product: IProduct | null }
-
-basket:changed { items, count, total } (payload из Cart)
-
-customer:changed { customer }
-
-form:errors CustomerErrors
-
-Презентер (Presenter)
-Файл: src/main.ts
-
-Назначение: связывает Model и View.
-
-подписывается на события от моделей (catalog:changed, basket:changed, product:selected, …) и обновляет UI;
-
-подписывается на события от View (card:*, basket:*, order:*, …) и вызывает методы моделей/открывает модальные окна;
-
-не эмитит событий сам — только обрабатывает;
-
-перерисовка выполняется при событиях изменения данных в моделях и при открытии модальных окон.
-
-Проверка работы
 Ручная проверка сценариев в интерфейсе:
 
-каталог отображается после загрузки с сервера
-
-клик по карточке → открывается превью в модалке
-
-price === null → кнопка Недоступно и заблокирована
-
-корзина: список/пустая, total, кнопка оформления disabled при пустой корзине
-
-оформление: 2 шага, ошибки, кнопки disabled пока форма невалидна
-
-модалки закрываются по оверлею и крестику, не скроллятся
+* каталог отображается после загрузки с сервера
+* клик по карточке → открывается превью в модалке
+* `price === null` → кнопка `Недоступно` и заблокирована
+* корзина: список/пустая, total, кнопка оформления disabled при пустой корзине
+* оформление: 2 шага, ошибки, кнопки disabled пока форма невалидна
+* модалки закрываются по оверлею и крестику, не скроллятся
